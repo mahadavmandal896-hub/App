@@ -1,37 +1,35 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>পাসওয়ার্ড প্রোটেকশন</title>
+    <title>Password Page</title>
 </head>
-<body style="text-align: center; margin-top: 50px; font-family: Arial;">
+<body style="text-align: center; margin-top: 50px; font-family: sans-serif;">
 
-    <h2>নাম এবং পাসওয়ার্ড দিন</h2>
+    <h2>Enter Details</h2>
     
-    <input type="text" id="name" placeholder="আপনার নাম"><br><br>
-    <input type="password" id="pass" placeholder="পাসওয়ার্ড (1234)"><br><br>
+    <input type="text" id="userName" placeholder="Enter Name"><br><br>
+    <input type="password" id="userPass" placeholder="Enter Password"><br><br>
     
-    <button onclick="login()">জমা দিন</button>
+    <button onclick="check()">Show Photo</button>
 
-    <div id="hiddenArea" style="display:none; margin-top: 30px;">
-        <h3 id="greet"></h3>
-        <img src="https://via.placeholder.com/200" width="250" style="border-radius: 10px;">
+    <div id="result" style="display:none; margin-top: 30px;">
+        <h3 id="welcome"></h3>
+        <img src="https://via.placeholder.com/300" alt="My Photo" style="width:300px; border-radius:10px;">
     </div>
 
     <script>
-        function login() {
-            var n = document.getElementById("name").value;
-            var p = document.getElementById("pass").value;
+        function check() {
+            var name = document.getElementById("userName").value;
+            var pass = document.getElementById("userPass").value;
 
-            // পাসওয়ার্ড চেক
-            if (p === "1234") {
-                document.getElementById("greet").innerHTML = "হ্যালো " + n + ", আপনার ছবি নিচে দেওয়া হলো:";
-                document.getElementById("hiddenArea").style.display = "block";
+            if (pass === "1234") {
+                document.getElementById("welcome").innerHTML = "Welcome, " + name;
+                document.getElementById("result").style.display = "block";
             } else {
-                alert("ভুল পাসওয়ার্ড! আবার চেষ্টা করুন।");
+                alert("Wrong Password!");
             }
         }
     </script>
 
 </body>
 </html>
-
