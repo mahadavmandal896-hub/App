@@ -1,35 +1,69 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Password Page</title>
+    <title>Simple Snake Game</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background: #2c3e50; color: white; flex-direction: column; font-family: sans-serif; }
+        canvas { border: 5px solid #ecf0f1; box-shadow: 0 0 20px rgba(0,0,0,0.5); background: #000; }
+        .controls { margin-top: 20px; display: grid; grid-template-columns: repeat(3, 60px); gap: 10px; }
+        button { width: 60px; height: 60px; font-size: 20px; background: #3498db; color: white; border: none; border-radius: 10px; }
+    </style>
 </head>
-<body style="text-align: center; margin-top: 50px; font-family: sans-serif;">
-
-    <h2>Enter Details</h2>
+<body>
+    <h2>Score: <span id="score">0</span></h2>
+    <canvas id="gameCanvas" width="300" height="300"></canvas>
     
-    <input type="text" id="userName" placeholder="Enter Name"><br><br>
-    <input type="password" id="userPass" placeholder="Enter Password"><br><br>
-    
-    <button onclick="check()">Show Photo</button>
-
-    <div id="result" style="display:none; margin-top: 30px;">
-        <h3 id="welcome"></h3>
-        <img src="https://via.placeholder.com/300" alt="My Photo" style="width:300px; border-radius:10px;">
+    <div class="controls">
+        <div></div><button onclick="changeDir('up')">↑</button><div></div>
+        <button onclick="changeDir('left')">←</button><button onclick="changeDir('down')">↓</button><button onclick="changeDir('right')">→</button>
     </div>
 
     <script>
-        function check() {
-            var name = document.getElementById("userName").value;
-            var pass = document.getElementById("userPass").value;
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+        let score = 0;
+        let snake = [{x: 150, y: 150}];
+        let dx = 10, dy = 0;
+        let foodX, foodY;
 
-            if (pass === "1234") {
-                document.getElementById("welcome").innerHTML = "Welcome, " + name;
-                document.getElementById("result").style.display = "block";
-            } else {
-                alert("Wrong Password!");
-            }
+        function main() {
+            if (didGameEnd()) return alert("Game Over! Score: " + score);
+            setTimeout(function onTick() {
+                clearCanvas();
+                drawFood();
+                advanceSnake();
+                drawSnake();
+                main();
+            }, 100);
         }
-    </script>
 
+        function clearCanvas() { ctx.fillStyle = "black"; ctx.fillRect(0, 0, canvas.width, canvas.height); }
+        function drawSnake() { snake.forEach(part => { ctx.fillStyle = "lime"; ctx.fillRect(part.x, part.y, 10, 10); }); }
+        function advanceSnake() {
+            const head = {x: snake[0].x + dx, y: snake[0].y + dy};
+            snake.unshift(head);
+            if (head.x === foodX && head.y === foodY) {
+                score += 10; document.getElementById('score').innerHTML = score; createFood();
+            } else { snake.pop(); }
+        }
+        function didGameEnd() {
+            for (let i = 4; i < snake.length; i++) if (snake[i].x === snake[0].x && snake[i].y === snake[0].y) return true;
+            return snake[0].x < 0 || snake[0].x > canvas.width - 10 || snake[0].y < 0 || snake[0].y > canvas.height - 10;
+        }
+        function createFood() {
+            foodX = Math.round((Math.random() * (canvas.width-10)) / 10) * 10;
+            foodY = Math.round((Math.random() * (canvas.height-10)) / 10) * 10;
+        }
+        function drawFood() { ctx.fillStyle = "red"; ctx.fillRect(foodX, foodY, 10, 10); }
+        function changeDir(dir) {
+            if (dir === 'up' && dy === 0) { dx = 0; dy = -10; }
+            if (dir === 'down' && dy === 0) { dx = 0; dy = 10; }
+            if (dir === 'left' && dx === 0) { dx = -10; dy = 0; }
+            if (dir === 'right' && dx === 0) { dx = 10; dy = 0; }
+        }
+        createFood();
+        main();
+    </script>
 </body>
 </html>
