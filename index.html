@@ -1,159 +1,37 @@
 <!DOCTYPE html>
-<html lang="bn">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Space Dodge Game</title>
-    <style>
-        body { margin: 0; overflow: hidden; background: #050505; font-family: 'Arial', sans-serif; }
-        canvas { display: block; background: linear-gradient(to bottom, #000428, #004e92); }
-        #ui {
-            position: absolute; top: 10px; left: 10px; color: white;
-            font-size: 20px; pointer-events: none;
-        }
-        #gameOver {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            color: white; text-align: center; display: none; background: rgba(0,0,0,0.8);
-            padding: 20px; border-radius: 10px; border: 2px solid #00d2ff;
-        }
-        button {
-            padding: 10px 20px; font-size: 16px; cursor: pointer;
-            background: #00d2ff; border: none; border-radius: 5px; color: black; font-weight: bold;
-        }
-    </style>
+    <title>পাসওয়ার্ড প্রোটেকশন</title>
 </head>
-<body>
+<body style="text-align: center; margin-top: 50px; font-family: Arial;">
 
-    <div id="ui">Score: <span id="score">0</span></div>
+    <h2>নাম এবং পাসওয়ার্ড দিন</h2>
     
-    <div id="gameOver">
-        <h1>Game Over!</h1>
-        <p>Your Final Score: <span id="finalScore">0</span></p>
-        <button onclick="resetGame()">Play Again</button>
+    <input type="text" id="name" placeholder="আপনার নাম"><br><br>
+    <input type="password" id="pass" placeholder="পাসওয়ার্ড (1234)"><br><br>
+    
+    <button onclick="login()">জমা দিন</button>
+
+    <div id="hiddenArea" style="display:none; margin-top: 30px;">
+        <h3 id="greet"></h3>
+        <img src="https://via.placeholder.com/200" width="250" style="border-radius: 10px;">
     </div>
 
-    <canvas id="gameCanvas"></canvas>
+    <script>
+        function login() {
+            var n = document.getElementById("name").value;
+            var p = document.getElementById("pass").value;
 
-<script>
-    const canvas = document.getElementById("gameCanvas");
-    const ctx = canvas.getContext("2d");
-    const scoreElement = document.getElementById("score");
-    const gameOverScreen = document.getElementById("gameOver");
-    const finalScoreElement = document.getElementById("finalScore");
-
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-
-    let score = 0;
-    let gameActive = true;
-    let obstacles = [];
-    let frame = 0;
-
-    // Player Object
-    const player = {
-        x: canvas.width / 2,
-        y: canvas.height - 70,
-        width: 40,
-        height: 40,
-        color: "#00d2ff",
-        speed: 8
-    };
-
-    // Controls
-    let keys = {};
-    window.addEventListener("keydown", (e) => keys[e.code] = true);
-    window.addEventListener("keyup", (e) => keys[e.code] = false);
-
-    // Touch Controls for Mobile
-    window.addEventListener("touchmove", (e) => {
-        let touchX = e.touches[0].clientX;
-        player.x = touchX - player.width / 2;
-    });
-
-    function spawnObstacle() {
-        if (frame % 40 === 0) {
-            let size = Math.random() * (60 - 20) + 20;
-            obstacles.push({
-                x: Math.random() * (canvas.width - size),
-                y: -size,
-                size: size,
-                speed: Math.random() * 5 + 3
-            });
+            // পাসওয়ার্ড চেক
+            if (p === "1234") {
+                document.getElementById("greet").innerHTML = "হ্যালো " + n + ", আপনার ছবি নিচে দেওয়া হলো:";
+                document.getElementById("hiddenArea").style.display = "block";
+            } else {
+                alert("ভুল পাসওয়ার্ড! আবার চেষ্টা করুন।");
+            }
         }
-    }
+    </script>
 
-    function update() {
-        if (!gameActive) return;
-
-        // Move Player
-        if ((keys["ArrowLeft"] || keys["KeyA"]) && player.x > 0) player.x -= player.speed;
-        if ((keys["ArrowRight"] || keys["KeyD"]) && player.x < canvas.width - player.width) player.x += player.speed;
-
-        // Update Obstacles
-        obstacles.forEach((obs, index) => {
-            obs.y += obs.speed;
-
-            // Collision Detection
-            if (
-                player.x < obs.x + obs.size &&
-                player.x + player.width > obs.x &&
-                player.y < obs.y + obs.size &&
-                player.y + player.height > obs.y
-            ) {
-                endGame();
-            }
-
-            // Remove off-screen obstacles
-            if (obs.y > canvas.height) {
-                obstacles.splice(index, 1);
-                score++;
-                scoreElement.innerText = score;
-            }
-        });
-
-        frame++;
-        spawnObstacle();
-    }
-
-    function draw() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-        // Draw Player (Rocket Shape)
-        ctx.fillStyle = player.color;
-        ctx.fillRect(player.x, player.y, player.width, player.height);
-        ctx.fillStyle = "white"; // Windows
-        ctx.fillRect(player.x + 10, player.y + 10, 20, 10);
-
-        // Draw Obstacles (Asteroids)
-        ctx.fillStyle = "#ff4b2b";
-        obstacles.forEach(obs => {
-            ctx.beginPath();
-            ctx.arc(obs.x + obs.size/2, obs.y + obs.size/2, obs.size/2, 0, Math.PI * 2);
-            ctx.fill();
-        });
-
-        requestAnimationFrame(() => {
-            update();
-            draw();
-        });
-    }
-
-    function endGame() {
-        gameActive = false;
-        gameOverScreen.style.display = "block";
-        finalScoreElement.innerText = score;
-    }
-
-    function resetGame() {
-        score = 0;
-        scoreElement.innerText = 0;
-        obstacles = [];
-        gameActive = true;
-        gameOverScreen.style.display = "none";
-        player.x = canvas.width / 2;
-    }
-
-    draw();
-</script>
 </body>
 </html>
+
