@@ -3,89 +3,157 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>একাউন্ট তৈরি করুন</title>
+    <title>Space Dodge Game</title>
     <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f0f2f5;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
+        body { margin: 0; overflow: hidden; background: #050505; font-family: 'Arial', sans-serif; }
+        canvas { display: block; background: linear-gradient(to bottom, #000428, #004e92); }
+        #ui {
+            position: absolute; top: 10px; left: 10px; color: white;
+            font-size: 20px; pointer-events: none;
         }
-        .form-container {
-            background: #ffffff;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            width: 100%;
-            max-width: 400px;
-        }
-        h2 {
-            text-align: center;
-            color: #1a73e8;
-            margin-bottom: 25px;
-        }
-        .input-group {
-            margin-bottom: 15px;
-        }
-        label {
-            display: block;
-            margin-bottom: 5px;
-            color: #555;
-            font-weight: bold;
-        }
-        input {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            box-sizing: border-box;
-            font-size: 16px;
-        }
-        input:focus {
-            border-color: #1a73e8;
-            outline: none;
+        #gameOver {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            color: white; text-align: center; display: none; background: rgba(0,0,0,0.8);
+            padding: 20px; border-radius: 10px; border: 2px solid #00d2ff;
         }
         button {
-            width: 100%;
-            padding: 12px;
-            background-color: #1a73e8;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            font-size: 18px;
-            cursor: pointer;
-            transition: background 0.3s;
-        }
-        button:hover {
-            background-color: #1557b0;
+            padding: 10px 20px; font-size: 16px; cursor: pointer;
+            background: #00d2ff; border: none; border-radius: 5px; color: black; font-weight: bold;
         }
     </style>
 </head>
 <body>
 
-<div class="form-container">
-    <h2>নতুন একাউন্ট তৈরি</h2>
-    <form action="#">
-        <div class="input-group">
-            <label for="mobile">মোবাইল নাম্বার</label>
-            <input type="tel" id="mobile" placeholder="আপনার মোবাইল নাম্বার দিন" required>
-        </div>
-        <div class="input-group">
-            <label for="username">ইউজারনেম</label>
-            <input type="text" id="username" placeholder="পছন্দমতো ইউজারনেম দিন" required>
-        </div>
-        <div class="input-group">
-            <label for="password">পাসওয়ার্ড</label>
-            <input type="password" id="password" placeholder="একটি স্ট্রং পাসওয়ার্ড দিন" required>
-        </div>
-        <button type="submit">একাউন্ট তৈরি করুন</button>
-    </form>
-</div>
+    <div id="ui">Score: <span id="score">0</span></div>
+    
+    <div id="gameOver">
+        <h1>Game Over!</h1>
+        <p>Your Final Score: <span id="finalScore">0</span></p>
+        <button onclick="resetGame()">Play Again</button>
+    </div>
 
+    <canvas id="gameCanvas"></canvas>
+
+<script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+    const scoreElement = document.getElementById("score");
+    const gameOverScreen = document.getElementById("gameOver");
+    const finalScoreElement = document.getElementById("finalScore");
+
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    let score = 0;
+    let gameActive = true;
+    let obstacles = [];
+    let frame = 0;
+
+    // Player Object
+    const player = {
+        x: canvas.width / 2,
+        y: canvas.height - 70,
+        width: 40,
+        height: 40,
+        color: "#00d2ff",
+        speed: 8
+    };
+
+    // Controls
+    let keys = {};
+    window.addEventListener("keydown", (e) => keys[e.code] = true);
+    window.addEventListener("keyup", (e) => keys[e.code] = false);
+
+    // Touch Controls for Mobile
+    window.addEventListener("touchmove", (e) => {
+        let touchX = e.touches[0].clientX;
+        player.x = touchX - player.width / 2;
+    });
+
+    function spawnObstacle() {
+        if (frame % 40 === 0) {
+            let size = Math.random() * (60 - 20) + 20;
+            obstacles.push({
+                x: Math.random() * (canvas.width - size),
+                y: -size,
+                size: size,
+                speed: Math.random() * 5 + 3
+            });
+        }
+    }
+
+    function update() {
+        if (!gameActive) return;
+
+        // Move Player
+        if ((keys["ArrowLeft"] || keys["KeyA"]) && player.x > 0) player.x -= player.speed;
+        if ((keys["ArrowRight"] || keys["KeyD"]) && player.x < canvas.width - player.width) player.x += player.speed;
+
+        // Update Obstacles
+        obstacles.forEach((obs, index) => {
+            obs.y += obs.speed;
+
+            // Collision Detection
+            if (
+                player.x < obs.x + obs.size &&
+                player.x + player.width > obs.x &&
+                player.y < obs.y + obs.size &&
+                player.y + player.height > obs.y
+            ) {
+                endGame();
+            }
+
+            // Remove off-screen obstacles
+            if (obs.y > canvas.height) {
+                obstacles.splice(index, 1);
+                score++;
+                scoreElement.innerText = score;
+            }
+        });
+
+        frame++;
+        spawnObstacle();
+    }
+
+    function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Draw Player (Rocket Shape)
+        ctx.fillStyle = player.color;
+        ctx.fillRect(player.x, player.y, player.width, player.height);
+        ctx.fillStyle = "white"; // Windows
+        ctx.fillRect(player.x + 10, player.y + 10, 20, 10);
+
+        // Draw Obstacles (Asteroids)
+        ctx.fillStyle = "#ff4b2b";
+        obstacles.forEach(obs => {
+            ctx.beginPath();
+            ctx.arc(obs.x + obs.size/2, obs.y + obs.size/2, obs.size/2, 0, Math.PI * 2);
+            ctx.fill();
+        });
+
+        requestAnimationFrame(() => {
+            update();
+            draw();
+        });
+    }
+
+    function endGame() {
+        gameActive = false;
+        gameOverScreen.style.display = "block";
+        finalScoreElement.innerText = score;
+    }
+
+    function resetGame() {
+        score = 0;
+        scoreElement.innerText = 0;
+        obstacles = [];
+        gameActive = true;
+        gameOverScreen.style.display = "none";
+        player.x = canvas.width / 2;
+    }
+
+    draw();
+</script>
 </body>
 </html>
-
-
