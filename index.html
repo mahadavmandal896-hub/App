@@ -1,65 +1,91 @@
-// --- Setup Three.js Scene ---
-const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
-const renderer = new THREE.WebGLRenderer();
-renderer.setSize(window.innerWidth, window.innerHeight);
-document.body.appendChild(renderer.domElement);
-
-// --- Particle System ---
-const particleCount = 8008; // Your requested number
-const geometry = new THREE.BufferGeometry();
-const positions = new Float32Array(particleCount * 3);
-const colors = new Float32Array(particleCount * 3);
-
-for (let i = 0; i < particleCount * 3; i++) {
-    positions[i] = (Math.random() - 0.5) * 10;
-}
-
-geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-const material = new THREE.PointsMaterial({ size: 0.05, vertexColors: true, transparent: true });
-const points = new THREE.Points(geometry, material);
-scene.add(points);
-
-// --- Hand Tracking Logic (MediaPipe) ---
-const hands = new Hands({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`});
-hands.setOptions({ maxNumHands: 1, modelComplexity: 1, minDetectionConfidence: 0.5 });
-
-hands.onResults((results) => {
-    if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
-        const hand = results.multiHandLandmarks[0];
-        
-        // Example: Track Index Finger Tip (Landmark 8)
-        const x = (hand[8].x - 0.5) * 20;
-        const y = -(hand[8].y - 0.5) * 20;
-
-        updateParticleBehavior(x, y, hand);
-    }
-});
-
-// --- Dynamic Behavior ---
-function updateParticleBehavior(hx, hy, landmarks) {
-    const pos = geometry.attributes.position.array;
-    
-    // Check for "Pinch" gesture to trigger expansion
-    const distance = Math.sqrt(
-        Math.pow(landmarks[4].x - landmarks[8].x, 2) + 
-        Math.pow(landmarks[4].y - landmarks[8].y, 2)
-    );
-
-    for (let i = 0; i < particleCount; i++) {
-        const idx = i * 3;
-        // Logic to move positions[idx] towards target shapes
-        // If distance < 0.05 (Pinch), explode particles
-        if (distance < 0.05) {
-            pos[idx] *= 1.05; // Expansion
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>একাউন্ট তৈরি করুন</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
         }
-    }
-    geometry.attributes.position.needsUpdate = true;
-}
+        .form-container {
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+        h2 {
+            text-align: center;
+            color: #1a73e8;
+            margin-bottom: 25px;
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: bold;
+        }
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+        input:focus {
+            border-color: #1a73e8;
+            outline: none;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #1a73e8;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 18px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background-color: #1557b0;
+        }
+    </style>
+</head>
+<body>
 
-function animate() {
-    requestAnimationFrame(animate);
-    renderer.render(scene, camera);
-}
-animate();
+<div class="form-container">
+    <h2>নতুন একাউন্ট তৈরি</h2>
+    <form action="#">
+        <div class="input-group">
+            <label for="mobile">মোবাইল নাম্বার</label>
+            <input type="tel" id="mobile" placeholder="আপনার মোবাইল নাম্বার দিন" required>
+        </div>
+        <div class="input-group">
+            <label for="username">ইউজারনেম</label>
+            <input type="text" id="username" placeholder="পছন্দমতো ইউজারনেম দিন" required>
+        </div>
+        <div class="input-group">
+            <label for="password">পাসওয়ার্ড</label>
+            <input type="password" id="password" placeholder="একটি স্ট্রং পাসওয়ার্ড দিন" required>
+        </div>
+        <button type="submit">একাউন্ট তৈরি করুন</button>
+    </form>
+</div>
+
+</body>
+</html>
+
 
